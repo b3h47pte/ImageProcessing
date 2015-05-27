@@ -13,23 +13,27 @@ int main(int argc, char** argv) {
     // Implement Gaussian Blur like NVIDIA : http://http.developer.nvidia.com/GPUGems3/gpugems3_ch40.html
     // Gaussian Function
     Func gaussian;
-    gaussian(x) = exp(-x * x / (2.0f * sigma * sigma)) / (sqrt(2.f * IMP::PI) * sigma);
+    gaussian(x) = exp(-x * x / (2.0f * sigma * sigma)) / (sqrtf(2.f * IMP::PI) * sigma);
 
     Func image = BoundaryConditions::repeat_edge(state);
 
-    RDom domain(-radius, 2 * radius + 1);
-    RVar varDomain = domain[0];
-    // Vertical Blur
-    Func vertBlur;
-    vertBlur(x, y) = gaussian(cast<int>(abs(domain))) * image(x, y + varDomain) / sum(gaussian(domain));
+    Expr domainWidth = 2 * radius + 1;
+    RDom gaussDomain(-radius, domainWidth);
+    // Vertical
+    Func vertGaussian;
+    vertGaussian(x, y) = gaussian(y);
+    vertGaussian(x, y) /= sum(gaussian(gaussDomain));
     
-    // Horizontal Blur
-    Func horzBlur;
-    horzBlur(x, y) = gaussian(cast<int>(abs(domain))) * image(x + varDomain, y) / sum(gaussian(domain));
-    
+    // Horizontal 
+    Func horzGaussian;
+    horzGaussian(x, y) = gaussian(x);
+    horzGaussian(x, y) /= sum(gaussian(gaussDomain));
+
     // Convolute Horizontal and Vertical
-    Func finalImage;
-    finalImage(x, y) = IMP::convolution(image, vertBlur, 1, 2 * radius + 1) * IMP::convolution(stepImage,  horzBlur, 2 * radius + 1, 1);
+    Func stepImage = IMP::convolution(image, vertGaussian, 0, 1, -radius, domainWidth);
+    Func finalImage = IMP::convolution(stepImage, horzGaussian, -radius, domainWidth, 0, 1);
+    
+
     finalImage.compile_to_file("gaussianBlur", {state, sigma});
 
     return 0;

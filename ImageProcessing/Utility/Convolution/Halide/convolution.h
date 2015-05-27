@@ -6,12 +6,12 @@ using namespace Halide;
 
 namespace IMP {
 
-Func convolution(Func input, Func kernel, int width, int height) {
+Func convolution(Func input, Func kernel, Expr xStart, Expr xWidth, Expr yStart, Expr yWidth) {
     Var x, y;
     Func convolute;
-    RDom horzDomain(-(width - 1)/2, width);
-    RDom vertDomain(-(height - 1)/2, height);
-    convolute(x, y) = input(x + horzDomain, y + vertDomain) * kernel(horzDomain, vertDomain);
+    RDom domain(xStart, xWidth, yStart, yWidth);
+    convolute(x, y) = 0.f;
+    convolute(x, y) += input(x + domain.x, y + domain.y) * kernel(domain.x, domain.y);
     return convolute;
 }
 

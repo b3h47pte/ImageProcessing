@@ -29,7 +29,7 @@ struct halide_filter_metadata_t;
 #ifdef __cplusplus
 extern "C" {
 #endif
-int gaussianBlur(buffer_t *_p0_buffer, const float _p1, buffer_t *_f2_buffer) HALIDE_FUNCTION_ATTRS;
+int gaussianBlur(buffer_t *_p0_buffer, const float _p1, buffer_t *_f4_buffer) HALIDE_FUNCTION_ATTRS;
 int gaussianBlur_argv(void **args) HALIDE_FUNCTION_ATTRS;
 extern const halide_filter_metadata_t gaussianBlur_metadata;
 #ifdef __cplusplus
