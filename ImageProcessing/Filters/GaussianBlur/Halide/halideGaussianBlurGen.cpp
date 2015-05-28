@@ -4,11 +4,11 @@
 using namespace Halide;
 
 int main(int argc, char** argv) {
-    Var x, y;
+    Var x, y, c;
     // Generate a Gaussian Blur Kernel that can be used for convolution.
-    ImageParam state(Float(32), 2);
+    ImageParam state(Float(32), 3);
     Param<float> sigma;
-    int radius = ceil(sigma.get() * 3.f);
+    Expr radius = ceil(sigma * 3.f);
 
     // Implement Gaussian Blur like NVIDIA : http://http.developer.nvidia.com/GPUGems3/gpugems3_ch40.html
     // Gaussian Function
@@ -21,19 +21,15 @@ int main(int argc, char** argv) {
     RDom gaussDomain(-radius, domainWidth);
     // Vertical
     Func vertGaussian;
-    vertGaussian(x, y) = gaussian(y);
-    vertGaussian(x, y) /= sum(gaussian(gaussDomain));
+    vertGaussian(x, y, c) = gaussian(y) / sum(gaussian(gaussDomain));
     
     // Horizontal 
     Func horzGaussian;
-    horzGaussian(x, y) = gaussian(x);
-    horzGaussian(x, y) /= sum(gaussian(gaussDomain));
+    horzGaussian(x, y, c) = gaussian(x) / sum(gaussian(gaussDomain));
 
     // Convolute Horizontal and Vertical
     Func stepImage = IMP::convolution(image, vertGaussian, 0, 1, -radius, domainWidth);
     Func finalImage = IMP::convolution(stepImage, horzGaussian, -radius, domainWidth, 0, 1);
-    
-
     finalImage.compile_to_file("gaussianBlur", {state, sigma});
 
     return 0;

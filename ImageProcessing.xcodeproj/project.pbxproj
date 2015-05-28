@@ -238,7 +238,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "echo \"${SRCROOT}\"\ncd \"${SRCROOT}/ImageProcessing\"\n# xcode puts all sorts of junk in the environment which prevents building a binary for osx (instead of ios). sudo'ing to yourself gives a fresh environment.\n\nsudo -u ${USER} c++ reaction_diffusion_2.cpp -I/Users/michaelbao/Documents/halide/include -arch x86_64 -L/Users/michaelbao/Documents/halide/bin -lHalide -o reaction_diffusion_2_generator -std=gnu++11\n\n#HL_TARGET=arm-64-ios DYLD_LIBRARY_PATH=/Users/michaelbao/Documents/halide/bin ./reaction_diffusion_2_generator\nHL_TARGET=x86-64 DYLD_LIBRARY_PATH=/Users/michaelbao/Documents/halide/bin ./reaction_diffusion_2_generator";
+			shellScript = "echo \"${SRCROOT}\"\ncd \"${SRCROOT}/ImageProcessing\"\n# xcode puts all sorts of junk in the environment which prevents building a binary for osx (instead of ios). sudo'ing to yourself gives a fresh environment.\n\nsudo -u ${USER} c++.cpp -I/Users/michaelbao/Documents/halide/include -arch x86_64 -L/Users/michaelbao/Documents/halide/bin -lHalide -o reaction_diffusion_2_generator -std=gnu++11\n\n#HL_TARGET=arm-64-ios DYLD_LIBRARY_PATH=/Users/michaelbao/Documents/halide/bin ./reaction_diffusion_2_generator\nHL_TARGET=x86-64 DYLD_LIBRARY_PATH=/Users/michaelbao/Documents/halide/bin ./reaction_diffusion_2_generator";
 		};
 /* End PBXShellScriptBuildPhase section */
 

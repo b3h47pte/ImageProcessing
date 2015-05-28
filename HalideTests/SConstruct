@@ -1,0 +1,23 @@
+import os
+
+env = Environment()
+
+# C-Flags
+env.Replace(CC='g++')
+env.Append(CCFLAGS=['-O3', '-Wall', '-std=gnu++11'])
+env.Append(CPPPATH=['#/../ImageProcessing/','#/../../../Documents/halide/include', '#/'])
+
+# Lib-Flags
+env.Append(LIBPATH=['#/../../../Documents/halide/bin'])
+env.Append(LIBS=['Halide', 'png', 'jpeg'])
+
+Export('env')
+
+for subdir, dirs, files in os.walk("./"):
+    for dir in dirs:
+        if not os.path.exists(dir +'/Sconscript'):
+            continue
+        SConscript(dir + '/SConscript', variant_dir = 'build/' + dir, duplicate = 1)
+
+
+
