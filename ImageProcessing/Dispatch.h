@@ -14,6 +14,9 @@
 // Dispatch class to manage the various filters and language implementations of those filters.
 @interface Dispatch: NSObject
 
++(NSArray*) GetSupportedLanguages;
++(NSArray*) GetSupportedFilters;
+
 -(void) RunFilterOnImage:(UIImage*)image WithFilter:(NSString*)filter Language:(NSString*)language;
 @end
 

@@ -56,8 +56,8 @@
     dispatcher = [[Dispatch alloc] init];
 
     imageOptions = @[@"Hecarim", @"Gnar", @"Rumble", @"Ryze"];
-    filterOptions = @[@"Gaussian", @"Laplacian of Gaussian Sharpen", @"Twirl (Distortion)"];
-    languageOptions = @[@"Halide", @"Metal", @"Objective C", @"Objective C + NEON", @"OpenGL ES"];
+    filterOptions = [Dispatch GetSupportedFilters];
+    languageOptions = [Dispatch GetSupportedLanguages];
 
     NSString* bundlePath = [[NSBundle mainBundle] pathForResource:@"Images" ofType:@"bundle"];
     imageBundle = [NSBundle bundleWithPath:bundlePath];
