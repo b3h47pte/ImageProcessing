@@ -7,13 +7,14 @@
 //
 
 #import "ViewController.h"
+#import "Dispatch.h"
 #include <Foundation/Foundation.h>
 #include <UIKit/UIPickerView.h>
 
 @interface ViewController()
 @end
 
-@implementation ViewController
+@implementation ViewController {
     UIPickerView* imagePicker;
     UIPickerView* filterPicker;
     UIPickerView* languagePicker;
@@ -23,6 +24,9 @@
     NSArray* languageOptions;
 
     NSBundle* imageBundle;
+    
+    Dispatch* dispatcher;
+}
 
 - (void)handleDoubleTap:(UIGestureRecognizer *)gestureRecognizer {
     [_imageSelectionText resignFirstResponder];
@@ -49,6 +53,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    dispatcher = [[Dispatch alloc] init];
+
     imageOptions = @[@"Hecarim", @"Gnar", @"Rumble", @"Ryze"];
     filterOptions = @[@"Gaussian", @"Laplacian of Gaussian Sharpen", @"Twirl (Distortion)"];
     languageOptions = @[@"Halide", @"Metal", @"Objective C", @"Objective C + NEON", @"OpenGL ES"];
@@ -135,6 +141,13 @@
 }
 
 - (IBAction)runFilterButtonClick:(id)sender {
+    // Time how long the filter runs for (maybe better to not get any overhead associated with the dispatch but that should hopefully be ~neglible~
+    NSDate* start = [NSDate date];
+    [dispatcher RunFilterOnImage:imageView.image WithFilter:_filterSelectionText.text Language:_languageSelectionText.text];
+    NSDate* end = [NSDate date];
+
+    NSTimeInterval totalTime = [end timeIntervalSinceDate:start];
+    _runtimeText.text = [NSString stringWithFormat:@"Runtime: %f seconds", totalTime];
 }
 
 @end
