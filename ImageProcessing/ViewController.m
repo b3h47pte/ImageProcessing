@@ -143,11 +143,17 @@
 - (IBAction)runFilterButtonClick:(id)sender {
     // Time how long the filter runs for (maybe better to not get any overhead associated with the dispatch but that should hopefully be ~neglible~
     NSDate* start = [NSDate date];
-    [dispatcher RunFilterOnImage:imageView.image WithFilter:_filterSelectionText.text Language:_languageSelectionText.text];
+    UIImage* newImage = [dispatcher RunFilterOnImage:_imageView.image WithFilter:_filterSelectionText.text Language:_languageSelectionText.text];
     NSDate* end = [NSDate date];
 
     NSTimeInterval totalTime = [end timeIntervalSinceDate:start];
     _runtimeText.text = [NSString stringWithFormat:@"Runtime: %f seconds", totalTime];
+
+    if (newImage == NULL) {
+        NSLog(@"Error: Return image is NULL");
+        return;
+    }
+    _imageView.image = newImage;
 }
 
 @end

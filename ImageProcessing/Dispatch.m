@@ -11,34 +11,43 @@
 #import "Dispatch/HalideDispatch.h"
 #import <Foundation/Foundation.h>
 
-static NSArray* filterOptions = @[@"Gaussian", @"Laplacian of Gaussian Sharpen", @"Twirl (Distortion)"];
-static NSArray* languageOptions = @[@"Halide", @"Metal", @"Objective C", @"Objective C + NEON", @"OpenGL ES"];
+static NSArray* filterOptions;
+static NSArray* languageOptions;
 
 @interface Dispatch()
-    -(void) HalideDispatcher:SEL filter Image:(UIImage*)image;
-    -(void) MetalDispatcher:SEL filter Image:(UIImage*)image;
-    -(void) ObjCDispatcher:SEL filter Image:(UIImage*)image;
-    -(void) NEONDispatcher:SEL filter Image:(UIImage*)image;
-    -(void) OpenGLDispatcher:SEL filter Image:(UIImage*)image;
-    -(void) GenericDispatch:SEL filter Image:(UIImage*)image Dispatch:(LanguageDispatch*) dispatch;
+    -(UIImage*) HalideDispatcher:(NSString*) filter Image:(UIImage*)image;
+    -(UIImage*) MetalDispatcher:(NSString*) filter Image:(UIImage*)image;
+    -(UIImage*) ObjCDispatcher:(NSString*) filter Image:(UIImage*)image;
+    -(UIImage*) NEONDispatcher:(NSString*) filter Image:(UIImage*)image;
+    -(UIImage*) OpenGLDispatcher:(NSString*) filter Image:(UIImage*)image;
+    -(UIImage*) GenericDispatch:(NSString*) filter Image:(UIImage*)image Dispatch:(LanguageDispatch*) dispatch;
 @end
 
 @implementation Dispatch {
     // Language dispatch table -- Must be called first to get the object for which to call the filter selector.
-    SEL languageDispatchTable[5] = {
-        @selector(HalideDispatcher:Image:),
-        @selector(MetalDispatcher:Image:),
-        @selector(ObjCDispatcher:Image:),
-        @selector(NEONDispatcher:Image:),
-        @selector(OpenGLDispatcher:Image:)
-    };
-
+    NSString* languageDispatchTable[5];
     // Filter dispatch table
-    SEL filterDispatchTable[3] = {
-        @selector(GaussianBlur:), 
-        @selector(LaplacianOfGaussianSharpen:), 
-        @selector(TwirlDistortion:)
-    };
+    NSString* filterDispatchTable[3];
+}
+
+-(id) init {
+    if (self = [super init] ) {
+        languageDispatchTable[0] = @"HalideDispatcher:Image:";
+        languageDispatchTable[1] = @"MetalDispatcher:Image:";
+        languageDispatchTable[2] = @"ObjCDispatcher:Image:";
+        languageDispatchTable[3] = @"NEONDispatcher:Image:";
+        languageDispatchTable[4] = @"OpenGLDispatcher:Image:";
+        
+        filterDispatchTable[0] = @"GaussianBlur:";
+        filterDispatchTable[1] = @"LaplacianOfGaussianSharpen:";
+        filterDispatchTable[2] = @"TwirlDistortion:";
+    }
+    return self;
+}
+
++(void) initialize {
+    filterOptions = @[@"Gaussian", @"Laplacian of Gaussian Sharpen", @"Twirl (Distortion)"];
+    languageOptions = @[@"Halide", @"Metal", @"Objective C", @"Objective C + NEON", @"OpenGL ES"];
 }
 
 +(NSArray*) GetSupportedLanguages {
@@ -49,12 +58,12 @@ static NSArray* languageOptions = @[@"Halide", @"Metal", @"Objective C", @"Objec
     return filterOptions;
 }
 
--(void) RunFilterOnImage:(UIImage*)image WithFilter:(NSString*)filter Language:(NSString*)language {
+-(UIImage*) RunFilterOnImage:(UIImage*)image WithFilter:(NSString*)filter Language:(NSString*)language {
     bool foundFilter = false;
-    SEL filterSelector;
+    NSString* filterSelector;
 
     for(int i = 0; i < filterOptions.count; ++i) {
-        if (filter == [filterOptions objectAtIndex:i]) {
+        if ([filter isEqualToString:[filterOptions objectAtIndex:i]]) {
             foundFilter = true;
             filterSelector = filterDispatchTable[i];
             break;
@@ -62,39 +71,70 @@ static NSArray* languageOptions = @[@"Halide", @"Metal", @"Objective C", @"Objec
     }
 
     if (!foundFilter) {
-        return;
+        return NULL;
     }
 
     for (int i = 0; i < languageOptions.count; ++i) {
-        if (language == [languageOptions objectAtIndex:i] && [self respondsToSelector:languageDispatchTable[i]])  {
-            [self performSelector:languageDispatchTable[i] withObject:filterSelector withObject:image];
-            break;
+        if ([language isEqualToString:[languageOptions objectAtIndex:i]] && [self respondsToSelector:NSSelectorFromString(languageDispatchTable[i])])  {
+            SEL languageSelector = NSSelectorFromString(languageDispatchTable[i]);
+            NSMethodSignature* signature = [Dispatch instanceMethodSignatureForSelector:languageSelector];
+            NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:signature];
+            [invocation setSelector:languageSelector];
+            [invocation setTarget:self];
+            [invocation setArgument:&filterSelector atIndex:2];
+            [invocation setArgument:&image atIndex:3];
+
+            UIImage* retImage;
+            [invocation invoke];
+            [invocation getReturnValue:&retImage];
+            return retImage;
         }
     }
+
+    return NULL;
 }
 
--(void) GenericDispatch:SEL filter Image:(UIImage*)image Dispatch:(LanguageDispatch*) dispatch {
-    if (![dispatch respondsToSelector:filter]) {
-        return;
+-(UIImage*) GenericDispatch:(NSString*) filter Image:(UIImage*)image Dispatch:(LanguageDispatch*) dispatch {
+    SEL selector = NSSelectorFromString(filter);
+    if (![dispatch respondsToSelector:selector]) {
+        return NULL;
     }
-    [dispatch performSelector:filter withObject:image];
+    NSMethodSignature* signature = [LanguageDispatch instanceMethodSignatureForSelector:selector];
+    NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:signature];
+    [invocation setSelector:selector];
+    [invocation setTarget:dispatch];
+    [invocation setArgument:&image atIndex:2];
+
+    UIImage* retImage;
+    [invocation invoke];
+    [invocation getReturnValue:&retImage];
+    return retImage;
 }
 
--(void) HalideDispatcher:SEL filter Image:(UIImage*)image {
-    static HalideDispatch* dispatch = [[HalideDispatch alloc] init];
-    [self GenericDispatch:filter Image:image Dispatch:dispatch];
+-(UIImage*) HalideDispatcher:(NSString*) filter Image:(UIImage*)image {
+    static HalideDispatch* dispatch = NULL;
+    static dispatch_once_t pred;
+    dispatch_once(&pred, ^{
+        dispatch = [[HalideDispatch alloc] init];
+    });
+    NSLog(@"Go Halide Dispatch");
+    return [self GenericDispatch:filter Image:image Dispatch:dispatch];
 }
 
--(void) MetalDispatcher:SEL filter Image:(UIImage*)image {
+-(UIImage*) MetalDispatcher:(NSString*) filter Image:(UIImage*)image {
+    return NULL;
 }
 
--(void) ObjCDispatcher:SEL filter Image:(UIImage*)image {
+-(UIImage*) ObjCDispatcher:(NSString*) filter Image:(UIImage*)image {
+    return NULL;
 }
 
--(void) NEONDispatcher:SEL filter Image:(UIImage*)image {
+-(UIImage*) NEONDispatcher:(NSString*) filter Image:(UIImage*)image {
+    return NULL;
 }
 
--(void) OpenGLDispatcher:SEL filter Image:(UIImage*)image {
+-(UIImage*) OpenGLDispatcher:(NSString*) filter Image:(UIImage*)image {
+    return NULL;
 }
 
 @end
