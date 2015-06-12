@@ -7,7 +7,7 @@
 @import UIKit;
 
 @interface HalideDispatch: LanguageDispatch
-
+-(UIImage*) Brighten:(UIImage*) image;
 -(UIImage*) GaussianBlur:(UIImage*) image;
 -(UIImage*) LaplacianOfGaussianSharpen:(UIImage*) image;
 -(UIImage*) TwirlDistortion:(UIImage*) image;

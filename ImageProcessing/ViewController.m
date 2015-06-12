@@ -47,7 +47,7 @@
 - (void)loadCurrentOriginalImage {
     NSString* imageName = [imageBundle pathForResource:_imageSelectionText.text ofType:@"jpg"];
     UIImage* loadedImage = [[UIImage alloc] initWithContentsOfFile:imageName];
-    _imageView.image = loadedImage;
+    [_imageView setImage:loadedImage];
 }
 
 - (void)viewDidLoad {
@@ -153,7 +153,7 @@
         NSLog(@"Error: Return image is NULL");
         return;
     }
-    _imageView.image = newImage;
+    [_imageView setImage:newImage];
 }
 
 @end

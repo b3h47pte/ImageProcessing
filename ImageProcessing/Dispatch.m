@@ -27,7 +27,7 @@ static NSArray* languageOptions;
     // Language dispatch table -- Must be called first to get the object for which to call the filter selector.
     NSString* languageDispatchTable[5];
     // Filter dispatch table
-    NSString* filterDispatchTable[3];
+    NSString* filterDispatchTable[4];
 }
 
 -(id) init {
@@ -41,12 +41,13 @@ static NSArray* languageOptions;
         filterDispatchTable[0] = @"GaussianBlur:";
         filterDispatchTable[1] = @"LaplacianOfGaussianSharpen:";
         filterDispatchTable[2] = @"TwirlDistortion:";
+        filterDispatchTable[3] = @"Brighten:";
     }
     return self;
 }
 
 +(void) initialize {
-    filterOptions = @[@"Gaussian", @"Laplacian of Gaussian Sharpen", @"Twirl (Distortion)"];
+    filterOptions = @[@"Gaussian", @"Laplacian of Gaussian Sharpen", @"Twirl (Distortion)", @"Brighten"];
     languageOptions = @[@"Halide", @"Metal", @"Objective C", @"Objective C + NEON", @"OpenGL ES"];
 }
 
@@ -84,10 +85,15 @@ static NSArray* languageOptions;
             [invocation setArgument:&filterSelector atIndex:2];
             [invocation setArgument:&image atIndex:3];
 
-            UIImage* retImage;
+            CFTypeRef retImage;
             [invocation invoke];
             [invocation getReturnValue:&retImage];
-            return retImage;
+            if (retImage) {
+                CFRetain(retImage);
+                UIImage* retUIImage = (__bridge_transfer UIImage*)retImage;
+                return retUIImage; 
+            }
+            return NULL;
         }
     }
 
@@ -105,10 +111,15 @@ static NSArray* languageOptions;
     [invocation setTarget:dispatch];
     [invocation setArgument:&image atIndex:2];
 
-    UIImage* retImage;
+    CFTypeRef retImage;
     [invocation invoke];
     [invocation getReturnValue:&retImage];
-    return retImage;
+    if (retImage) {
+        CFRetain(retImage);
+        UIImage* retUIImage = (__bridge_transfer UIImage*)retImage;
+        return retUIImage;
+    }
+    return NULL;
 }
 
 -(UIImage*) HalideDispatcher:(NSString*) filter Image:(UIImage*)image {
@@ -117,7 +128,6 @@ static NSArray* languageOptions;
     dispatch_once(&pred, ^{
         dispatch = [[HalideDispatch alloc] init];
     });
-    NSLog(@"Go Halide Dispatch");
     return [self GenericDispatch:filter Image:image Dispatch:dispatch];
 }
 
