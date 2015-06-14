@@ -67,7 +67,7 @@
 }
 
 -(void) GaussianBlurHelper:(NSData*) input Output:(NSData*) output {
-    gaussianBlur([self UnpackNSDataToBuffer:input], 3.f, [self UnpackNSDataToBuffer:output]);
+    gaussianBlur([self UnpackNSDataToBuffer:input], 1.f, [self UnpackNSDataToBuffer:output]);
 }
 
 -(UIImage*) GaussianBlur:(UIImage*) image {

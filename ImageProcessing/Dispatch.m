@@ -9,6 +9,7 @@
 #import "Dispatch.h"
 #import "Dispatch/LanguageDispatch.h"
 #import "Dispatch/HalideDispatch.h"
+#import "Dispatch/MetalDispatch.h"
 #import <Foundation/Foundation.h>
 
 static NSArray* filterOptions;
@@ -132,7 +133,12 @@ static NSArray* languageOptions;
 }
 
 -(UIImage*) MetalDispatcher:(NSString*) filter Image:(UIImage*)image {
-    return NULL;
+    static MetalDispatch* dispatch = NULL;
+    static dispatch_once_t pred;
+    dispatch_once(&pred, ^{
+        dispatch = [[MetalDispatch alloc] init];
+    });
+    return [self GenericDispatch:filter Image:image Dispatch:dispatch];
 }
 
 -(UIImage*) ObjCDispatcher:(NSString*) filter Image:(UIImage*)image {

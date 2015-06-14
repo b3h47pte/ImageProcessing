@@ -1,7 +1,7 @@
 CXX = g++
 TARGET=$(MAKE_TARGET)
 ifeq ($(strip $(MAKE_TARGET)),)
-	TARGET = x86-64
+	TARGET = x86_64
 else
 	TARGET = $(MAKE_TARGET)
 endif
@@ -17,3 +17,11 @@ ifeq ($(strip $(MAKE_HALIDE_TARGET)),)
 else
 	HALIDE_TARGET = $(MAKE_HALIDE_TARGET)
 endif
+
+METAL_BUILD_DIR=/Users/michaelbao/Github/ImageProcessing/ImageProcessing/MetalBuild.bundle
+METAL_CXX=metal
+METAL_CXX_FLAGS=-arch air64 -emit-llvm -c -gline-tables-only -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk -ffast-math -std=ios-metal1.0
+METAL_AR=metal-ar
+METAL_AR_FLAGS=r $(METAL_BUILD_DIR)/filters.metal-ar
+METAL_LIB=metallib
+METAL_LIB_FLAGS=-o $(METAL_BUILD_DIR)/filters.metallib
